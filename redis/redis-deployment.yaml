@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: lhl-dev
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - image: redis:latest
+          name: redis
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - mountPath: /data
+              name: redis-data
+          livenessProbe:
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            tcpSocket:
+              port: 6379
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 512Mi
+            limits:
+              cpu: 0.3
+              memory: 1024Mi
+      volumes:
+        - name: redis-data
+          hostPath:
+            path: /d/data/redis # 要挂载的路径，/d 表示windows下的D盘
+            type: DirectoryOrCreate
